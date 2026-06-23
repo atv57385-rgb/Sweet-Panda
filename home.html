@@ -1,0 +1,765 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sweet Panda | Sweets &amp; Pastries</title>
+
+  <!-- Tailwind CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Font Awesome 6 -->
+  <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+        crossorigin="anonymous" />
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&family=Noto+Naskh+Arabic:wght@400;600&display=swap"
+        rel="stylesheet" />
+
+  <!-- Tailwind token config -->
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            blush:      '#F9C4CF',
+            'blush-lt': '#FEF0F3',
+            'blush-dk': '#E8899A',
+            ink:        '#1C1C1E',
+            mist:       '#6B7280',
+          },
+          fontFamily: {
+            display: ['"Playfair Display"', 'Georgia', 'serif'],
+            body:    ['"DM Sans"',          'system-ui', 'sans-serif'],
+            arabic:  ['"Noto Naskh Arabic"','serif'],
+          },
+        },
+      },
+    };
+  </script>
+
+  <style>
+    /* ── Base ─────────────────────────────────────────── */
+    html { scroll-behavior: smooth; }
+
+    /* Thin pink scrollbar */
+    ::-webkit-scrollbar       { width: 4px; }
+    ::-webkit-scrollbar-track { background: #fff; }
+    ::-webkit-scrollbar-thumb { background: #F9C4CF; border-radius: 4px; }
+
+    /* Skip link */
+    .skip-link {
+      position: absolute;
+      top: -100%;
+      left: 1rem;
+      padding: .4rem 1rem;
+      background: #1C1C1E;
+      color: #fff;
+      font-size: .8rem;
+      border-radius: 0 0 .5rem .5rem;
+      z-index: 999;
+      transition: top .2s;
+      font-family: 'DM Sans', sans-serif;
+    }
+    .skip-link:focus { top: 0; }
+
+    /* ── Keyframe animations ──────────────────────────── */
+    @keyframes panda-float {
+      0%, 100% { transform: translateY(0px); }
+      50%       { transform: translateY(-11px); }
+    }
+    @keyframes blob-drift-a {
+      0%, 100% { transform: translate(0,0) scale(1); }
+      40%       { transform: translate(14px,-10px) scale(1.06); }
+      70%       { transform: translate(-8px, 14px) scale(.96); }
+    }
+    @keyframes blob-drift-b {
+      0%, 100% { transform: translate(0,0) scale(1); }
+      35%       { transform: translate(-16px,12px) scale(1.04); }
+      70%       { transform: translate(10px,-14px) scale(.97); }
+    }
+    @keyframes scroll-bounce {
+      0%, 100% { transform: translateY(0) translateX(-50%); opacity: .55; }
+      50%       { transform: translateY(7px) translateX(-50%); opacity: 1; }
+    }
+    @keyframes card-reveal {
+      from { opacity: 0; transform: translateY(26px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── Animation classes ────────────────────────────── */
+    .panda-float { animation: panda-float 4.2s ease-in-out infinite; }
+    .blob-a      { animation: blob-drift-a 14s ease-in-out infinite; }
+    .blob-b      { animation: blob-drift-b 17s ease-in-out infinite; }
+    .panda-glow  { filter: drop-shadow(0 14px 34px rgba(249,196,207,.7)); }
+
+    /* ── Scroll reveal ─────────────────────────────────── */
+    .reveal {
+      opacity: 0;
+      transform: translateY(26px);
+      transition: opacity .7s cubic-bezier(.22,1,.36,1),
+                  transform .7s cubic-bezier(.22,1,.36,1);
+    }
+    .reveal.visible { opacity: 1; transform: translateY(0); }
+
+    /* ── Stagger card reveal (keyframe-based to avoid    ── */
+    /* ── conflicting with .card-hover transition)        ── */
+    .stagger > * { opacity: 0; }
+    .stagger.visible > *:nth-child(1) { animation: card-reveal .65s cubic-bezier(.22,1,.36,1) .05s forwards; }
+    .stagger.visible > *:nth-child(2) { animation: card-reveal .65s cubic-bezier(.22,1,.36,1) .16s forwards; }
+    .stagger.visible > *:nth-child(3) { animation: card-reveal .65s cubic-bezier(.22,1,.36,1) .27s forwards; }
+    .stagger.visible > *:nth-child(4) { animation: card-reveal .65s cubic-bezier(.22,1,.36,1) .38s forwards; }
+
+    /* ── Card hover lift ──────────────────────────────── */
+    .card-hover { transition: box-shadow .28s ease, transform .28s ease; will-change: transform; }
+    .card-hover:hover {
+      box-shadow: 0 18px 42px rgba(249,196,207,.48);
+      transform: translateY(-5px);
+    }
+
+    /* ── Specialty card top-border reveal on hover ─────── */
+    .specialty-card { position: relative; overflow: hidden; }
+    .specialty-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, #F9C4CF, #E8899A);
+      opacity: 0;
+      transition: opacity .3s ease;
+    }
+    .specialty-card:hover::before { opacity: 1; }
+
+    /* ── Desktop nav active underline ─────────────────── */
+    .nav-link { position: relative; }
+    .nav-link::after {
+      content: '';
+      position: absolute;
+      bottom: -4px; left: 50%;
+      width: 0; height: 2px;
+      background: #E8899A;
+      border-radius: 1px;
+      transform: translateX(-50%);
+      transition: width .28s ease;
+    }
+    .nav-link:hover::after,
+    .nav-link.active::after { width: 65%; }
+
+    /* ── Mobile menu slide animation ──────────────────── */
+    #mobileMenu {
+      max-height: 0;
+      overflow: hidden;
+      opacity: 0;
+      transition: max-height .38s cubic-bezier(.22,1,.36,1), opacity .25s ease;
+    }
+    #mobileMenu.open { max-height: 340px; opacity: 1; }
+
+    /* ── Scroll indicator ─────────────────────────────── */
+    .scroll-indicator {
+      position: absolute;
+      bottom: 2rem; left: 50%;
+      transform: translateX(-50%);
+      animation: scroll-bounce 2.2s ease-in-out infinite;
+      cursor: pointer;
+      background: none; border: none;
+    }
+
+    /* ── Wave divider ─────────────────────────────────── */
+    .wave-divider {
+      position: absolute;
+      bottom: -1px; left: 0; right: 0;
+      line-height: 0;
+      pointer-events: none;
+    }
+    .wave-divider svg { display: block; width: 100%; }
+
+    /* ── Subtle dot pattern ───────────────────────────── */
+    .dot-pattern {
+      background-image: radial-gradient(circle, #E8899A 1px, transparent 1px);
+      background-size: 30px 30px;
+    }
+
+    /* ── Focus styles ─────────────────────────────────── */
+    :focus-visible {
+      outline: 2px solid #E8899A;
+      outline-offset: 3px;
+      border-radius: 4px;
+    }
+
+    /* ── Reduce motion ───────────────────────────────── */
+    @media (prefers-reduced-motion: reduce) {
+      .panda-float, .blob-a, .blob-b, .scroll-indicator { animation: none; }
+      .reveal, .stagger > * {
+        opacity: 1;
+        transform: none;
+        transition: none;
+        animation: none;
+      }
+    }
+  </style>
+</head>
+
+<body class="bg-white text-ink font-body antialiased">
+
+<!-- Skip link (keyboard accessibility) -->
+<a href="#main" class="skip-link">Skip to main content</a>
+
+<!-- ━━━━━━  SVG SYMBOL DEFS — panda defined once, reused via <use>  ━━━━━━ -->
+<!-- Standard dark panda (navbar, hero, about) -->
+<svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false"
+     style="position:absolute;width:0;height:0;overflow:hidden;">
+  <defs>
+    <symbol id="panda-std" viewBox="0 0 100 100">
+      <!-- Ears -->
+      <circle cx="21" cy="29" r="18" fill="#1C1C1E"/>
+      <circle cx="79" cy="29" r="18" fill="#1C1C1E"/>
+      <circle cx="21" cy="29" r="9"  fill="#2d2d2d"/>
+      <circle cx="79" cy="29" r="9"  fill="#2d2d2d"/>
+      <!-- Face -->
+      <circle cx="50" cy="57" r="38" fill="#ffffff"/>
+      <circle cx="50" cy="57" r="38" fill="none" stroke="#fce4e9" stroke-width="1.2"/>
+      <!-- Eye patches -->
+      <ellipse cx="36" cy="51" rx="12" ry="13" fill="#1C1C1E"/>
+      <ellipse cx="64" cy="51" rx="12" ry="13" fill="#1C1C1E"/>
+      <!-- Eye whites -->
+      <circle cx="38.5" cy="48.5" r="4.8" fill="#ffffff"/>
+      <circle cx="66.5" cy="48.5" r="4.8" fill="#ffffff"/>
+      <!-- Pupils -->
+      <circle cx="38.5" cy="49"   r="2.9" fill="#1C1C1E"/>
+      <circle cx="66.5" cy="49"   r="2.9" fill="#1C1C1E"/>
+      <!-- Eye shine -->
+      <circle cx="39.7" cy="47.5" r="1.2" fill="#ffffff"/>
+      <circle cx="67.7" cy="47.5" r="1.2" fill="#ffffff"/>
+      <!-- Blush -->
+      <circle cx="27"   cy="66"   r="9"   fill="#F9C4CF" opacity=".6"/>
+      <circle cx="73"   cy="66"   r="9"   fill="#F9C4CF" opacity=".6"/>
+      <!-- Nose -->
+      <ellipse cx="50"  cy="68"   rx="6"  ry="4.5" fill="#1C1C1E"/>
+      <!-- Smile -->
+      <path d="M43.5 73.5 Q50 81.5 56.5 73.5"
+            stroke="#1C1C1E" stroke-width="2.6" fill="none" stroke-linecap="round"/>
+    </symbol>
+  </defs>
+</svg>
+
+
+<!-- ━━━━━━━━━━━━━━━━━━━━━━━━  HEADER / NAV  ━━━━━━━━━━━━━━━━━━━━━━━━ -->
+<header id="navbar"
+        class="fixed inset-x-0 top-0 z-50 bg-white/95 backdrop-blur border-b border-blush/40 transition-shadow duration-300">
+  <div class="max-w-6xl mx-auto px-6 py-3 flex items-center justify-between">
+
+    <!-- Logo -->
+    <a href="#home" class="flex items-center gap-3 group" aria-label="Sweet Panda — home">
+      <div class="w-10 h-10 shrink-0" aria-hidden="true">
+        <svg viewBox="0 0 100 100" class="w-full h-full">
+          <use href="#panda-std"/>
+        </svg>
+      </div>
+      <div>
+        <p class="font-display font-bold text-ink text-xl leading-none tracking-wide
+                  group-hover:text-blush-dk transition-colors duration-200">
+          Sweet Panda
+        </p>
+        <p class="font-body text-mist text-[10px] tracking-widest uppercase leading-tight mt-0.5">
+          Sweets &amp; Pastries
+        </p>
+      </div>
+    </a>
+
+    <!-- Desktop nav links -->
+    <nav class="hidden md:flex items-center gap-7" aria-label="Primary">
+      <a href="#home"        class="nav-link font-body text-sm font-medium text-ink hover:text-blush-dk transition-colors duration-200" data-section="home">Home</a>
+      <a href="#about"       class="nav-link font-body text-sm font-medium text-ink hover:text-blush-dk transition-colors duration-200" data-section="about">About</a>
+      <a href="#specialties" class="nav-link font-body text-sm font-medium text-ink hover:text-blush-dk transition-colors duration-200" data-section="specialties">Specialties</a>
+      <a href="#contact"     class="nav-link font-body text-sm font-medium text-ink hover:text-blush-dk transition-colors duration-200" data-section="contact">Contact</a>
+      <a href="https://www.instagram.com/banda_sweet_1"
+         target="_blank" rel="noopener noreferrer"
+         class="font-body text-sm font-medium bg-ink text-white px-5 py-2.5 rounded-full
+                hover:bg-blush-dk transition-colors duration-200 flex items-center gap-1.5">
+        Follow Us <span aria-hidden="true">↗</span>
+      </a>
+    </nav>
+
+    <!-- Mobile hamburger -->
+    <button id="menuBtn"
+            aria-label="Open navigation menu"
+            aria-expanded="false"
+            aria-controls="mobileMenu"
+            class="md:hidden w-9 h-9 flex items-center justify-center rounded-full
+                   hover:bg-blush-lt transition-colors duration-200">
+      <i id="menuIcon" class="fa-solid fa-bars text-ink" aria-hidden="true"></i>
+    </button>
+  </div>
+
+  <!-- Mobile menu — slides via CSS max-height, border is inside so it hides when collapsed -->
+  <div id="mobileMenu" class="md:hidden bg-white">
+    <nav aria-label="Mobile" class="border-t border-blush/40 px-6 py-5 space-y-4">
+      <a href="#home"        class="block font-body text-sm font-medium text-ink hover:text-blush-dk transition-colors duration-200" data-mobile-link>Home</a>
+      <a href="#about"       class="block font-body text-sm font-medium text-ink hover:text-blush-dk transition-colors duration-200" data-mobile-link>About</a>
+      <a href="#specialties" class="block font-body text-sm font-medium text-ink hover:text-blush-dk transition-colors duration-200" data-mobile-link>Specialties</a>
+      <a href="#contact"     class="block font-body text-sm font-medium text-ink hover:text-blush-dk transition-colors duration-200" data-mobile-link>Contact</a>
+      <a href="https://www.instagram.com/banda_sweet_1"
+         target="_blank" rel="noopener noreferrer"
+         class="inline-block font-body text-sm font-medium bg-ink text-white
+                px-5 py-2.5 rounded-full hover:bg-blush-dk transition-colors duration-200"
+         data-mobile-link>
+        Follow Us ↗
+      </a>
+    </nav>
+  </div>
+</header>
+
+
+<main id="main">
+
+<!-- ━━━━━━━━━━━━━━━━━━━━━━━━  HERO  ━━━━━━━━━━━━━━━━━━━━━━━━ -->
+<section id="home"
+         class="relative min-h-screen flex flex-col items-center justify-center overflow-hidden bg-blush-lt pt-16">
+
+  <!-- Ambient blobs -->
+  <div class="blob-a absolute top-16 left-6 w-52 h-52 bg-blush/30 rounded-full blur-3xl pointer-events-none" aria-hidden="true"></div>
+  <div class="blob-b absolute bottom-20 right-6 w-72 h-72 bg-blush/20 rounded-full blur-3xl pointer-events-none" aria-hidden="true"></div>
+  <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2
+              w-[520px] h-[520px] bg-white/50 rounded-full blur-3xl pointer-events-none" aria-hidden="true"></div>
+
+  <!-- Hero content -->
+  <div class="relative z-10 text-center max-w-2xl mx-auto px-6">
+
+    <!-- Floating panda -->
+    <div class="flex justify-center mb-10">
+      <div class="panda-glow panda-float">
+        <svg width="176" height="176" viewBox="0 0 100 100"
+             role="img" aria-label="Sweet Panda mascot">
+          <use href="#panda-std"/>
+        </svg>
+      </div>
+    </div>
+
+    <!-- Eyebrow -->
+    <p class="font-body text-xs uppercase tracking-[.22em] text-blush-dk font-medium mb-3">
+      Welcome to
+    </p>
+
+    <!-- H1 -->
+    <h1 class="font-display font-bold text-5xl md:text-7xl text-ink leading-tight mb-4">
+      Sweet Panda
+    </h1>
+
+    <!-- Bilingual sub-headline -->
+    <div class="mb-11">
+      <p class="font-arabic text-2xl md:text-3xl text-mist mb-2" dir="rtl" lang="ar">
+        حلويات ومرطبات
+      </p>
+      <p class="font-display italic text-blush-dk text-base md:text-lg">
+        Sweets &amp; Pastries
+      </p>
+    </div>
+
+    <!-- CTAs -->
+    <div class="flex flex-col sm:flex-row gap-3 justify-center">
+      <a href="#contact"
+         class="group font-body text-sm font-medium bg-ink text-white px-8 py-3.5 rounded-full
+                hover:bg-blush-dk transition-colors duration-200 tracking-wide
+                flex items-center justify-center gap-2">
+        Get in Touch
+        <span class="inline-block transition-transform duration-200 group-hover:translate-x-1"
+              aria-hidden="true">→</span>
+      </a>
+      <a href="#about"
+         class="font-body text-sm font-medium border border-ink/20 text-ink px-8 py-3.5 rounded-full
+                hover:border-blush-dk hover:text-blush-dk transition-colors duration-200 tracking-wide">
+        Our Story
+      </a>
+    </div>
+  </div>
+
+  <!-- Animated scroll indicator -->
+  <button class="scroll-indicator"
+          onclick="document.getElementById('about').scrollIntoView({behavior:'smooth'})"
+          aria-label="Scroll to About section">
+    <div class="flex flex-col items-center gap-2 text-mist">
+      <p class="font-body text-[10px] uppercase tracking-widest">Scroll</p>
+      <svg width="14" height="20" viewBox="0 0 14 20" fill="none"
+           xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <path d="M7 1V16M7 16L1.5 10.5M7 16L12.5 10.5"
+              stroke="#E8899A" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+  </button>
+
+  <!-- Wave transition to next section (white) -->
+  <div class="wave-divider" aria-hidden="true">
+    <svg viewBox="0 0 1440 56" preserveAspectRatio="none" height="56"
+         xmlns="http://www.w3.org/2000/svg">
+      <path d="M0,28 C240,60 480,0 720,28 C960,56 1200,4 1440,28 L1440,56 L0,56 Z"
+            fill="#ffffff"/>
+    </svg>
+  </div>
+</section>
+
+
+<!-- ━━━━━━━━━━━━━━━━━━━━━━━━  ABOUT  ━━━━━━━━━━━━━━━━━━━━━━━━ -->
+<section id="about" class="relative py-28 px-6 bg-white overflow-hidden">
+
+  <!-- Subtle dot-pattern backdrop -->
+  <div class="dot-pattern absolute inset-0 opacity-[.022] pointer-events-none" aria-hidden="true"></div>
+
+  <div class="relative max-w-xl mx-auto text-center reveal">
+
+    <!-- Ornament divider -->
+    <div class="flex items-center justify-center gap-3 mb-10" aria-hidden="true">
+      <div class="h-px w-16 bg-gradient-to-r from-transparent to-blush"></div>
+      <svg width="28" height="28" viewBox="0 0 100 100">
+        <use href="#panda-std"/>
+      </svg>
+      <div class="h-px w-16 bg-gradient-to-l from-transparent to-blush"></div>
+    </div>
+
+    <p class="font-body text-xs uppercase tracking-[.22em] text-blush-dk font-medium mb-5">
+      Our Story
+    </p>
+
+    <h2 class="font-display font-bold text-4xl md:text-5xl text-ink leading-snug mb-10">
+      A Little Sweet,<br/>
+      <em class="font-normal italic text-blush-dk">A Lot of Love</em>
+    </h2>
+
+    <div class="space-y-5 text-mist font-body text-base md:text-[1.05rem] leading-relaxed font-light">
+      <p>
+        At <span class="font-medium text-ink">Sweet Panda</span>, every bite is crafted with
+        the finest ingredients and a genuine passion for the art of pastry — because we believe
+        a great dessert is more than a treat, it is a moment of pure joy.
+      </p>
+      <p>
+        From delicate, melt-in-your-mouth sweets to indulgent, freshly made pastries, every
+        creation is prepared daily with care and an eye for beautiful detail.
+      </p>
+      <p class="font-arabic text-base leading-loose text-mist/80" dir="rtl" lang="ar">
+        نصنع لكم حلويات استثنائية بمكونات فاخرة وحب حقيقي،
+        لأن كل لحظة تستحق لمسة من الجمال والحلاوة.
+      </p>
+    </div>
+
+    <!-- Bottom divider -->
+    <div class="flex items-center justify-center gap-3 mt-12" aria-hidden="true">
+      <div class="h-px w-14 bg-blush"></div>
+      <div class="w-2 h-2 rounded-full bg-blush-dk"></div>
+      <div class="h-px w-14 bg-blush"></div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ━━━━━━━━━━━━━━━━━━━━━━━━  SPECIALTIES  ━━━━━━━━━━━━━━━━━━━━━━━━ -->
+<section id="specialties" class="py-28 px-6 bg-blush-lt">
+  <div class="max-w-5xl mx-auto">
+
+    <!-- Heading -->
+    <div class="text-center mb-14 reveal">
+      <p class="font-body text-xs uppercase tracking-[.22em] text-blush-dk font-medium mb-4">
+        What We Make
+      </p>
+      <h2 class="font-display font-bold text-4xl md:text-5xl text-ink leading-snug">
+        Made Fresh,<br/>
+        <em class="font-normal italic text-blush-dk">Made Daily</em>
+      </h2>
+    </div>
+
+    <!-- Cards — stagger-revealed -->
+    <div class="stagger grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
+
+      <article class="specialty-card bg-white rounded-3xl p-7 card-hover">
+        <div class="text-3xl mb-4" aria-hidden="true">🥐</div>
+        <h3 class="font-display font-semibold text-ink text-lg mb-2">Fresh Pastries</h3>
+        <p class="font-body text-mist text-sm font-light leading-relaxed">
+          Buttery, flaky layers baked to golden perfection every morning.
+        </p>
+      </article>
+
+      <article class="specialty-card bg-white rounded-3xl p-7 card-hover">
+        <div class="text-3xl mb-4" aria-hidden="true">🍬</div>
+        <h3 class="font-display font-semibold text-ink text-lg mb-2">Handmade Sweets</h3>
+        <p class="font-body text-mist text-sm font-light leading-relaxed">
+          Artisanal confections crafted with care and the finest ingredients.
+        </p>
+      </article>
+
+      <article class="specialty-card bg-white rounded-3xl p-7 card-hover">
+        <div class="text-3xl mb-4" aria-hidden="true">🎂</div>
+        <h3 class="font-display font-semibold text-ink text-lg mb-2">Celebration Cakes</h3>
+        <p class="font-body text-mist text-sm font-light leading-relaxed">
+          Beautiful custom cakes for life's most memorable moments.
+        </p>
+      </article>
+
+      <article class="specialty-card bg-white rounded-3xl p-7 card-hover">
+        <div class="text-3xl mb-4" aria-hidden="true">🌙</div>
+        <h3 class="font-display font-semibold text-ink text-lg mb-2">Arabic Delights</h3>
+        <p class="font-body text-mist text-sm font-light leading-relaxed font-arabic text-right"
+           dir="rtl" lang="ar">
+          حلويات شرقية أصيلة بعطر الزعفران والهيل
+        </p>
+      </article>
+
+    </div>
+
+    <!-- Gentle CTA nudge -->
+    <p class="text-center font-body text-sm text-mist font-light mt-12 reveal">
+      Curious what's on today?
+      <a href="#contact"
+         class="text-ink font-medium underline underline-offset-4 decoration-blush
+                hover:text-blush-dk transition-colors duration-200">
+        Get in touch
+      </a>
+      for today's selection.
+    </p>
+  </div>
+</section>
+
+
+<!-- ━━━━━━━━━━━━━━━━━━━━━━━━  CONTACT  ━━━━━━━━━━━━━━━━━━━━━━━━ -->
+<section id="contact" class="py-28 px-6 bg-white">
+  <div class="max-w-4xl mx-auto">
+
+    <!-- Heading -->
+    <div class="text-center mb-14 reveal">
+      <p class="font-body text-xs uppercase tracking-[.22em] text-blush-dk font-medium mb-4">
+        Connect With Us
+      </p>
+      <h2 class="font-display font-bold text-4xl md:text-5xl text-ink leading-snug">
+        Stay Sweet,<br/>
+        <em class="font-normal italic text-blush-dk">Stay Connected</em>
+      </h2>
+    </div>
+
+    <!-- Contact cards — stagger -->
+    <div class="stagger grid md:grid-cols-3 gap-5">
+
+      <!-- Phone -->
+      <article class="bg-blush-lt rounded-3xl p-8 text-center card-hover">
+        <div class="w-14 h-14 bg-white rounded-2xl flex items-center justify-center mx-auto mb-5 shadow-sm">
+          <i class="fa-solid fa-phone text-blush-dk text-xl" aria-hidden="true"></i>
+        </div>
+        <h3 class="font-display font-semibold text-ink text-xl mb-2">Call Us</h3>
+        <p class="font-body text-mist text-sm font-light mb-5">We'd love to hear from you</p>
+        <a href="tel:07774280226"
+           class="font-body font-bold text-ink hover:text-blush-dk transition-colors duration-200 text-base tracking-wide">
+          07774 280 226
+        </a>
+      </article>
+
+      <!-- Instagram -->
+      <article class="bg-blush-lt rounded-3xl p-8 text-center card-hover">
+        <div class="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-5"
+             style="background:linear-gradient(135deg,#f9ce34,#ee2a7b,#6228d7);">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <rect x="2" y="2" width="20" height="20" rx="6" ry="6" stroke="white" stroke-width="2" fill="none"/>
+            <circle cx="12" cy="12" r="4" stroke="white" stroke-width="2" fill="none"/>
+            <circle cx="17.5" cy="6.5" r="1.2" fill="white"/>
+          </svg>
+        </div>
+        <h3 class="font-display font-semibold text-ink text-xl mb-2">Instagram</h3>
+        <p class="font-body text-mist text-sm font-light mb-5">Follow our sweet journey</p>
+        <a href="https://www.instagram.com/banda_sweet_1"
+           target="_blank" rel="noopener noreferrer"
+           class="font-body font-semibold text-ink hover:text-blush-dk transition-colors duration-200 text-sm tracking-wide">
+          @banda_sweet_1 ↗
+        </a>
+      </article>
+
+      <!-- TikTok -->
+      <article class="bg-blush-lt rounded-3xl p-8 text-center card-hover">
+        <div class="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-5 bg-black">
+          <svg width="30" height="30" viewBox="0 0 24 24" fill="white" aria-hidden="true">
+            <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-2.88 2.5
+                     2.89 2.89 0 0 1-2.89-2.89 2.89 2.89 0 0 1 2.89-2.89c.28 0 .54.04.79.1V9.01
+                     a6.33 6.33 0 0 0-.79-.05 6.34 6.34 0 0 0-6.34 6.34 6.34 6.34 0 0 0 6.34 6.34
+                     6.34 6.34 0 0 0 6.33-6.34V8.69a8.18 8.18 0 0 0 4.78 1.52V6.77a4.85 4.85 0 0 1-1.01-.08z"/>
+          </svg>
+        </div>
+        <h3 class="font-display font-semibold text-ink text-xl mb-2">TikTok</h3>
+        <p class="font-body text-mist text-sm font-light mb-5">Watch our creations come to life</p>
+        <a href="https://www.tiktok.com/@sweet.banda8"
+           target="_blank" rel="noopener noreferrer"
+           class="font-body font-semibold text-ink hover:text-blush-dk transition-colors duration-200 text-sm tracking-wide">
+          @sweet.banda8 ↗
+        </a>
+      </article>
+
+    </div>
+
+    <!-- Social CTA strip -->
+    <div class="mt-10 reveal flex flex-col sm:flex-row items-center justify-center gap-4">
+      <a href="https://www.instagram.com/banda_sweet_1"
+         target="_blank" rel="noopener noreferrer"
+         class="flex items-center gap-2.5 text-white font-body text-sm font-medium
+                px-6 py-3 rounded-full transition-opacity duration-200 hover:opacity-88"
+         style="background:linear-gradient(135deg,#f9ce34,#ee2a7b,#6228d7);">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <rect x="2" y="2" width="20" height="20" rx="6" ry="6" stroke="white" stroke-width="2.2" fill="none"/>
+          <circle cx="12" cy="12" r="4" stroke="white" stroke-width="2.2" fill="none"/>
+          <circle cx="17.5" cy="6.5" r="1.3" fill="white"/>
+        </svg>
+        Follow on Instagram
+      </a>
+      <a href="https://www.tiktok.com/@sweet.banda8"
+         target="_blank" rel="noopener noreferrer"
+         class="flex items-center gap-2.5 bg-ink text-white font-body text-sm font-medium
+                px-6 py-3 rounded-full transition-opacity duration-200 hover:opacity-80">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="white" aria-hidden="true">
+          <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-2.88 2.5
+                   2.89 2.89 0 0 1-2.89-2.89 2.89 2.89 0 0 1 2.89-2.89c.28 0 .54.04.79.1V9.01
+                   a6.33 6.33 0 0 0-.79-.05 6.34 6.34 0 0 0-6.34 6.34 6.34 6.34 0 0 0 6.34 6.34
+                   6.34 6.34 0 0 0 6.33-6.34V8.69a8.18 8.18 0 0 0 4.78 1.52V6.77a4.85 4.85 0 0 1-1.01-.08z"/>
+        </svg>
+        Follow on TikTok
+      </a>
+    </div>
+  </div>
+</section>
+
+</main>
+
+
+<!-- ━━━━━━━━━━━━━━━━━━━━━━━━  FOOTER  ━━━━━━━━━━━━━━━━━━━━━━━━ -->
+<footer class="bg-ink py-10 px-6">
+  <div class="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
+
+    <!-- Footer logo — different palette, kept inline -->
+    <div class="flex items-center gap-3">
+      <div class="w-9 h-9 opacity-80" aria-hidden="true">
+        <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" class="w-full h-full">
+          <circle cx="21" cy="29" r="18" fill="#fff" opacity=".7"/>
+          <circle cx="79" cy="29" r="18" fill="#fff" opacity=".7"/>
+          <circle cx="21" cy="29" r="9"  fill="#bbb"/>
+          <circle cx="79" cy="29" r="9"  fill="#bbb"/>
+          <circle cx="50" cy="57" r="38" fill="#fff"/>
+          <ellipse cx="36" cy="51" rx="12" ry="13" fill="#555"/>
+          <ellipse cx="64" cy="51" rx="12" ry="13" fill="#555"/>
+          <circle cx="38.5" cy="48.5" r="4.8" fill="#fff"/>
+          <circle cx="66.5" cy="48.5" r="4.8" fill="#fff"/>
+          <circle cx="38.5" cy="49"   r="2.9" fill="#555"/>
+          <circle cx="66.5" cy="49"   r="2.9" fill="#555"/>
+          <circle cx="27"   cy="66"   r="9"   fill="#F9C4CF" opacity=".6"/>
+          <circle cx="73"   cy="66"   r="9"   fill="#F9C4CF" opacity=".6"/>
+          <ellipse cx="50"  cy="68"   rx="6"  ry="4.5" fill="#555"/>
+          <path d="M43.5 73.5 Q50 81.5 56.5 73.5"
+                stroke="#555" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div>
+        <p class="font-display font-bold text-white text-lg leading-none">Sweet Panda</p>
+        <p class="font-body text-white/35 text-[10px] uppercase tracking-widest mt-0.5">Sweets &amp; Pastries</p>
+      </div>
+    </div>
+
+    <!-- Copyright -->
+    <p class="font-body text-white/40 text-sm text-center">
+      &copy; 2026 Sweet Panda. All rights reserved.
+    </p>
+
+    <!-- Social icons -->
+    <div class="flex items-center gap-3">
+      <a href="https://www.instagram.com/banda_sweet_1"
+         target="_blank" rel="noopener noreferrer"
+         aria-label="Follow Sweet Panda on Instagram"
+         class="w-10 h-10 rounded-xl flex items-center justify-center
+                hover:opacity-85 transition-opacity duration-200"
+         style="background:linear-gradient(135deg,#f9ce34,#ee2a7b,#6228d7);">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <rect x="2" y="2" width="20" height="20" rx="6" ry="6" stroke="white" stroke-width="2" fill="none"/>
+          <circle cx="12" cy="12" r="4" stroke="white" stroke-width="2" fill="none"/>
+          <circle cx="17.5" cy="6.5" r="1.3" fill="white"/>
+        </svg>
+      </a>
+      <a href="https://www.tiktok.com/@sweet.banda8"
+         target="_blank" rel="noopener noreferrer"
+         aria-label="Follow Sweet Panda on TikTok"
+         class="w-10 h-10 rounded-xl bg-white flex items-center justify-center
+                hover:opacity-85 transition-opacity duration-200">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="#1C1C1E" aria-hidden="true">
+          <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-2.88 2.5
+                   2.89 2.89 0 0 1-2.89-2.89 2.89 2.89 0 0 1 2.89-2.89c.28 0 .54.04.79.1V9.01
+                   a6.33 6.33 0 0 0-.79-.05 6.34 6.34 0 0 0-6.34 6.34 6.34 6.34 0 0 0 6.34 6.34
+                   6.34 6.34 0 0 0 6.33-6.34V8.69a8.18 8.18 0 0 0 4.78 1.52V6.77a4.85 4.85 0 0 1-1.01-.08z"/>
+        </svg>
+      </a>
+    </div>
+  </div>
+</footer>
+
+
+<!-- ━━━━━━━━━━━━━━━━━━━━━━━━  SCRIPTS  ━━━━━━━━━━━━━━━━━━━━━━━━ -->
+<script>
+'use strict';
+
+/* ── Mobile menu ──────────────────────────────────────────── */
+const navbar    = document.getElementById('navbar');
+const menuBtn   = document.getElementById('menuBtn');
+const menuIcon  = document.getElementById('menuIcon');
+const mobileMenu = document.getElementById('mobileMenu');
+let menuOpen = false;
+
+function setMenu(open) {
+  menuOpen = open;
+  menuBtn.setAttribute('aria-expanded', open);
+  mobileMenu.classList.toggle('open', open);
+  menuIcon.className = open ? 'fa-solid fa-xmark text-ink' : 'fa-solid fa-bars text-ink';
+}
+
+menuBtn.addEventListener('click', () => setMenu(!menuOpen));
+
+// Close when a mobile link is tapped
+document.querySelectorAll('[data-mobile-link]').forEach(link => {
+  link.addEventListener('click', () => setMenu(false));
+});
+
+// Close on outside click
+document.addEventListener('click', e => {
+  if (menuOpen && !navbar.contains(e.target)) setMenu(false);
+});
+
+// Close on Escape key
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && menuOpen) setMenu(false);
+});
+
+/* ── Navbar shadow on scroll ──────────────────────────────── */
+window.addEventListener('scroll', () => {
+  navbar.classList.toggle('shadow-md', window.scrollY > 8);
+}, { passive: true });
+
+/* ── Shared IntersectionObserver for scroll reveals ─────── */
+const revealObs = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      e.target.classList.add('visible');
+      revealObs.unobserve(e.target); // fire once, then stop watching
+    }
+  });
+}, { threshold: 0.12 });
+
+document.querySelectorAll('.reveal, .stagger').forEach(el => revealObs.observe(el));
+
+/* ── Active nav link on scroll ────────────────────────────── */
+const sections = document.querySelectorAll('section[id]');
+const navLinks = document.querySelectorAll('.nav-link[data-section]');
+
+const activeObs = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      const id = e.target.id;
+      navLinks.forEach(link => {
+        link.classList.toggle('active', link.dataset.section === id);
+      });
+    }
+  });
+}, { rootMargin: '-35% 0px -60% 0px' });
+
+sections.forEach(s => activeObs.observe(s));
+</script>
+</body>
+</html>
